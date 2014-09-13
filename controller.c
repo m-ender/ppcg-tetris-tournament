@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "tetromino.h"
 
 #define BOARD_W 10
@@ -34,9 +35,12 @@ static game_state_t game_state;
 void initialize_state();
 void print_state(FILE* stream, float ttt);
 int get_level();
+int next_tetromino();
 
 int main(int argc, char** argv)
 {
+    srand(time(NULL));
+
     initialize_state();
 
     print_state(stdout, 1.0f);
@@ -50,7 +54,7 @@ void initialize_state()
     game_state.next_T = prototypes[1];
     int x, y;
     for (y = 0; y < BOARD_H; ++y)
-        for (x = 0; x < BOARD_H; ++x)
+        for (x = 0; x < BOARD_W; ++x)
             game_state.board[y][x] = '.';
 }
 
@@ -71,4 +75,47 @@ void print_state(FILE* stream, float ttt)
 int get_level()
 {
     return game_state.lines_cleared / 10;
+}
+
+int next_tetromino()
+{
+    static int first_run = 1;
+    static int bag[7];
+    static int next;
+
+    if (!next)
+    {
+        int i, j;
+        int rands[7];
+        for (i = 0; i < 7; ++i)
+            rands[i] = rand();
+
+        // Fill the bag with the indices from largest to smallest
+        // random number
+        for (i = 0; i < 7; ++i)
+        {
+            int max = -1;
+            int j, max_j;
+            for (j = 0; j < 7; ++j)
+                if (rands[j] > max)
+                {
+                    max = rands[j];
+                    max_j = j;
+                }
+
+            rands[max_j] = -1;
+            bag[i] = max_j;
+        }
+
+        if (first_run)
+        {
+            first_run = 0;
+            next = rand() % 7;
+        }
+    }
+
+    int result = bag[next++];
+    next %= 7;
+
+    return result;
 }
