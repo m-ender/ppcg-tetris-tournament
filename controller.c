@@ -50,12 +50,22 @@ void initialize_state()
 {
     game_state.lines_cleared = 0;
     // TODO: Initialize Random Generator and fill tetrominoes
-    game_state.current_T = prototypes[0];
-    game_state.next_T = prototypes[1];
+    game_state.current_T = prototypes[next_tetromino()];
+    game_state.next_T = prototypes[next_tetromino()];
+
     int x, y;
     for (y = 0; y < BOARD_H; ++y)
         for (x = 0; x < BOARD_W; ++x)
             game_state.board[y][x] = '.';
+
+    int i;
+    for (i = 0; i < 4; ++i)
+    {
+        tetromino_t* tet = &game_state.current_T;
+        x = tet->x + layouts[tet->type - 'A'][0][i][0];
+        y = tet->y + layouts[tet->type - 'A'][0][i][1];
+        game_state.board[y][x] = '*';
+    }
 }
 
 void print_state(FILE* stream, float ttt)
@@ -71,27 +81,6 @@ void print_state(FILE* stream, float ttt)
     for (y = 0; y < BOARD_H; ++y)
         fprintf(stream, "%.10s\n", &game_state.board[y]);
 
-    putchar('\n');
-    int i,j,l;
-    for (l = 0; l < 4; ++l)
-    {
-        for (i = 0; i < 4; ++i)
-        {
-            for (j = 0; j < 4; ++j)
-            {
-                char tile = 0;
-                int k;
-                for (k = 0; k < 4; ++k)
-                    if (layouts['T'-'A'][l][k][0] == j && layouts['T'-'A'][l][k][1] == i)
-                        tile = 1;
-
-                putchar(tile?'#':'.');
-            }
-            putchar('\n');
-
-        }
-        putchar('\n');
-    }
 }
 
 int get_level()
