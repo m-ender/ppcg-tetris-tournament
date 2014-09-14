@@ -70,6 +70,28 @@ void print_state(FILE* stream, float ttt)
     int y;
     for (y = 0; y < BOARD_H; ++y)
         fprintf(stream, "%.10s\n", &game_state.board[y]);
+
+    putchar('\n');
+    int i,j,l;
+    for (l = 0; l < 4; ++l)
+    {
+        for (i = 0; i < 4; ++i)
+        {
+            for (j = 0; j < 4; ++j)
+            {
+                char tile = 0;
+                int k;
+                for (k = 0; k < 4; ++k)
+                    if (layouts['T'-'A'][l][k][0] == j && layouts['T'-'A'][l][k][1] == i)
+                        tile = 1;
+
+                putchar(tile?'#':'.');
+            }
+            putchar('\n');
+
+        }
+        putchar('\n');
+    }
 }
 
 int get_level()
