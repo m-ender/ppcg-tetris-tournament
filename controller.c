@@ -192,6 +192,52 @@ int collision()
     return 0;
 }
 
+void clear_lines()
+{
+    int x, y_from, y_to;
+
+    int lines_cleared = 0;
+
+    for(y_to = y_from = BOARD_H - 1; y_to >= 0; --y_to, --y_from)
+    {
+        int cleared = 1;
+        for (x = 0; x < BOARD_W; ++x)
+            if (game_state.board[y_from][x] != '#')
+            {
+                cleared = 0;
+                break;
+            }
+
+        if (cleared)
+        {
+            ++lines_cleared;
+            ++y_to;
+            continue;
+        }
+
+        if (y_from != y_to)
+            for (x = 0; x < BOARD_W; ++x)
+                game_state.board[y_to][x] = y_from < 0 ? '.' : game_state.board[y_from][x];
+    }
+
+    int base_score;
+    switch (lines_cleared)
+    {
+    case 0: base_score = 0;    break;
+    case 1: base_score = 40;   break;
+    case 2: base_score = 100;  break;
+    case 3: base_score = 300;  break;
+    case 4: base_score = 1200; break;
+    default:
+        printf("Cleared more than 4 lines. This should not have happened!\n");
+        exit(1);
+    }
+
+    game_state.score += base_score * (get_level() + 1);
+
+    game_state.lines_cleared += lines_cleared;
+}
+
 int gravity_tick()
 {
     int i;
@@ -220,6 +266,8 @@ int gravity_tick()
             printf("Game Over! Final Score: %d\n", game_state.score);
             return 1;
         }
+
+        clear_lines();
     }
 
     render_tetromino('*');
