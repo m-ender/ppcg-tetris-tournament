@@ -40,6 +40,9 @@ int get_level();
 int next_tetromino();
 int collision();
 int gravity_tick();
+int move_down();
+void move_left();
+void move_right();
 
 int main(int argc, char** argv)
 {
@@ -55,12 +58,21 @@ int main(int argc, char** argv)
     {
         switch (input)
         {
+        case 'D':
+            if (move_down()) return 0;
+            break;
         case 'G':
             if (gravity_tick()) return 0;
-            print_state(stdout, 1.0f);
-            printf("Score: %d\n", game_state.score);
+            break;
+        case 'L':
+            move_left();
+            break;
+        case 'R':
+            move_right();
             break;
         }
+        print_state(stdout, 1.0f);
+        printf("Score: %d\n", game_state.score);
     }
 
     return 0;
@@ -208,4 +220,38 @@ int gravity_tick()
 
     render_tetromino('*');
     return 0;
+}
+
+int move_down()
+{
+    ++game_state.score;
+    return gravity_tick();
+}
+
+void move_left()
+{
+    int i;
+    render_tetromino('.');
+
+    tetromino_t* tet = &game_state.current_T;
+
+    --tet->x;
+    if(collision())
+        ++tet->x;
+
+    render_tetromino('*');
+}
+
+void move_right()
+{
+    int i;
+    render_tetromino('.');
+
+    tetromino_t* tet = &game_state.current_T;
+
+    ++tet->x;
+    if(collision())
+        --tet->x;
+
+    render_tetromino('*');
 }
