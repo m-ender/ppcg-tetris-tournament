@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include "tetromino.h"
 
 #define BOARD_W 10
@@ -24,6 +25,7 @@ tetromino_t prototypes[7] = {
 
 typedef struct {
     int lines_cleared;
+    int score;
     tetromino_t current_T;
     tetromino_t next_T;
     char board[BOARD_H][BOARD_W];
@@ -36,6 +38,8 @@ void initialize_state();
 void print_state(FILE* stream, float ttt);
 int get_level();
 int next_tetromino();
+int collision();
+void gravity_tick();
 
 int main(int argc, char** argv)
 {
@@ -44,12 +48,44 @@ int main(int argc, char** argv)
     initialize_state();
 
     print_state(stdout, 1.0f);
+    printf("Score: %d\n", game_state.score);
+
+    char input;
+    while (input = getchar())
+    {
+        switch (input)
+        {
+        case 'G':
+            gravity_tick();
+            print_state(stdout, 1.0f);
+            printf("Score: %d\n", game_state.score);
+            break;
+        default:
+            printf("Invalid input: %c\n", input);
+        }
+    }
+
+    return 0;
+}
+
+void render_tetromino(char character)
+{
+    int i;
+    tetromino_t* tet = &game_state.current_T;
+    for (i = 0; i < 4; ++i)
+    {
+        char* coord = &layouts[tet->type - 'A'][0][i][0];
+        int x = tet->x + coord[0];
+        int y = tet->y + coord[1];
+        game_state.board[y][x] = character;
+    }
 }
 
 void initialize_state()
 {
     game_state.lines_cleared = 0;
-    // TODO: Initialize Random Generator and fill tetrominoes
+    game_state.score = 0;
+
     game_state.current_T = prototypes[next_tetromino()];
     game_state.next_T = prototypes[next_tetromino()];
 
@@ -58,14 +94,7 @@ void initialize_state()
         for (x = 0; x < BOARD_W; ++x)
             game_state.board[y][x] = '.';
 
-    int i;
-    for (i = 0; i < 4; ++i)
-    {
-        tetromino_t* tet = &game_state.current_T;
-        x = tet->x + layouts[tet->type - 'A'][0][i][0];
-        y = tet->y + layouts[tet->type - 'A'][0][i][1];
-        game_state.board[y][x] = '*';
-    }
+    render_tetromino('*');
 }
 
 void print_state(FILE* stream, float ttt)
@@ -129,4 +158,43 @@ int next_tetromino()
     next %= 7;
 
     return result;
+}
+
+int collision()
+{
+    int i, j;
+    tetromino_t* tet = &game_state.current_T;
+    for (i = 0; i < 4; ++i)
+    {
+        char* coords = &layouts[tet->type - 'A'][tet->orientation][i][0];
+        int x = tet->x + coords[0];
+        int y = tet->y + coords[1];
+
+        if (x < 0 || y < 0 || x >= BOARD_W || y >= BOARD_H ||
+            game_state.board[y][x] == '#')
+            return 1;
+    }
+
+    return 0;
+}
+
+void gravity_tick()
+{
+    int i;
+    render_tetromino('.');
+
+    tetromino_t* tet = &game_state.current_T;
+    ++tet->y;
+
+    if(collision())
+    {
+        --tet->y;
+
+        render_tetromino('#');
+
+        game_state.current_T = game_state.next_T;
+        game_state.next_T = prototypes[next_tetromino()];
+    }
+
+    render_tetromino('*');
 }
