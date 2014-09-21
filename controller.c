@@ -43,6 +43,7 @@ int gravity_tick();
 int move_down();
 void move_left();
 void move_right();
+void rotate();
 
 int main(int argc, char** argv)
 {
@@ -70,6 +71,9 @@ int main(int argc, char** argv)
         case 'R':
             move_right();
             break;
+        case 'U':
+            rotate();
+            break;
         }
         print_state(stdout, 1.0f);
         printf("Score: %d\n", game_state.score);
@@ -84,7 +88,7 @@ void render_tetromino(char character)
     tetromino_t* tet = &game_state.current_T;
     for (i = 0; i < 4; ++i)
     {
-        char* coord = &layouts[tet->type - 'A'][0][i][0];
+        char* coord = &layouts[tet->type - 'A'][tet->orientation][i][0];
         int x = tet->x + coord[0];
         int y = tet->y + coord[1];
         game_state.board[y][x] = character;
@@ -252,6 +256,25 @@ void move_right()
     ++tet->x;
     if(collision())
         --tet->x;
+
+    render_tetromino('*');
+}
+
+void rotate()
+{
+    int i;
+    render_tetromino('.');
+
+    tetromino_t* tet = &game_state.current_T;
+
+    ++tet->orientation;
+    tet->orientation %= 4;
+    if(collision())
+    {
+        printf("wat?\n");
+        tet->orientation += 3;
+        tet->orientation %= 4;
+    }
 
     render_tetromino('*');
 }
