@@ -39,7 +39,7 @@ void print_state(FILE* stream, float ttt);
 int get_level();
 int next_tetromino();
 int collision();
-void gravity_tick();
+int gravity_tick();
 
 int main(int argc, char** argv)
 {
@@ -56,12 +56,10 @@ int main(int argc, char** argv)
         switch (input)
         {
         case 'G':
-            gravity_tick();
+            if (gravity_tick()) return 0;
             print_state(stdout, 1.0f);
             printf("Score: %d\n", game_state.score);
             break;
-        default:
-            printf("Invalid input: %c\n", input);
         }
     }
 
@@ -178,7 +176,7 @@ int collision()
     return 0;
 }
 
-void gravity_tick()
+int gravity_tick()
 {
     int i;
     render_tetromino('.');
@@ -194,7 +192,20 @@ void gravity_tick()
 
         game_state.current_T = game_state.next_T;
         game_state.next_T = prototypes[next_tetromino()];
+
+        int x, y, hit_top = 0;
+        for (y = 0; y < 2; ++y)
+            for (x = 0; x < BOARD_W; ++x)
+                if (game_state.board[y][x] == '#')
+                    hit_top == 1;
+
+        if(hit_top || collision())
+        {
+            printf("Game Over! Final Score: %d\n", game_state.score);
+            return 1;
+        }
     }
 
     render_tetromino('*');
+    return 0;
 }
