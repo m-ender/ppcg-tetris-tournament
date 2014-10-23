@@ -18,7 +18,7 @@ double startTimeInMicroSec;
     LARGE_INTEGER frequency; // ticks per second
     LARGE_INTEGER startCount;
 #else
-    timeval startCount;
+    struct timeval startCount;
 #endif
 
 typedef struct {
@@ -136,7 +136,7 @@ double get_elapsed_time()
 
     endTimeInMicroSec = endCount.QuadPart * (1000000.0 / frequency.QuadPart);
 #else
-    timeval endCount;
+    struct timeval endCount;
     gettimeofday(&endCount, NULL);
 
     startTimeInMicroSec = (startCount.tv_sec * 1000000.0) + startCount.tv_usec;
