@@ -6,6 +6,21 @@
 #define BOARD_W 10
 #define BOARD_H 22
 
+// Portable high-res timer
+#ifdef WIN32   // Windows system specific
+#include <windows.h>
+#else          // Unix based system specific
+#include <sys/time.h>
+#endif
+
+double startTimeInMicroSec;
+#ifdef WIN32
+    LARGE_INTEGER frequency; // ticks per second
+    LARGE_INTEGER startCount;
+#else
+    timeval startCount;
+#endif
+
 typedef struct {
     char type;
     int x;
@@ -34,6 +49,8 @@ typedef struct {
 static game_state_t game_state;
 
 // Forward declarations
+void initialize_timer();
+double get_elapsed_time();
 void initialize_state();
 void print_state(FILE* stream, float ttt);
 int get_level();
@@ -51,10 +68,24 @@ int main(int argc, char** argv)
 
     initialize_state();
 
+    initialize_timer();
+
     print_state(stdout, 1.0f);
     printf("Score: %d\n", game_state.score);
 
     char input;
+
+    double dTime = 0;
+    while (1)
+    {
+        dTime += get_elapsed_time();
+        if (dTime > 1)
+        {
+            printf("Tick.\n");
+            dTime -= 1;
+        }
+    }
+
     while (input = getchar())
     {
         switch (input)
@@ -80,6 +111,42 @@ int main(int argc, char** argv)
     }
 
     return 0;
+}
+
+void initialize_timer()
+{
+#ifdef WIN32
+    QueryPerformanceFrequency(&frequency);
+    startCount.QuadPart = 0;
+    QueryPerformanceCounter(&startCount);
+    startTimeInMicroSec = startCount.QuadPart * (1000000.0 / frequency.QuadPart);
+#else
+    startCount.tv_sec = startCount.tv_usec = 0;
+    gettimeofday(&startCount, NULL);
+    startTimeInMicroSec = (startCount.tv_sec * 1000000.0) + startCount.tv_usec;
+#endif
+}
+
+double get_elapsed_time()
+{
+    double endTimeInMicroSec;
+#ifdef WIN32
+    LARGE_INTEGER endCount;
+    QueryPerformanceCounter(&endCount);
+
+    endTimeInMicroSec = endCount.QuadPart * (1000000.0 / frequency.QuadPart);
+#else
+    timeval endCount;
+    gettimeofday(&endCount, NULL);
+
+    startTimeInMicroSec = (startCount.tv_sec * 1000000.0) + startCount.tv_usec;
+    endTimeInMicroSec = (endCount.tv_sec * 1000000.0) + endCount.tv_usec;
+#endif
+
+    double elapsed = (endTimeInMicroSec - startTimeInMicroSec) * 0.000001;
+    startCount = endCount;
+    startTimeInMicroSec = endTimeInMicroSec;
+    return elapsed;
 }
 
 void render_tetromino(char character)
@@ -319,7 +386,6 @@ void rotate()
     tet->orientation %= 4;
     if(collision())
     {
-        printf("wat?\n");
         tet->orientation += 3;
         tet->orientation %= 4;
     }
